@@ -193,13 +193,11 @@ Service_aria2() {
   cat >/etc/systemd/system/aria2.service <<EOF
 [Unit]
 Description=aria2 service
-Wants=network.target
-After=network.target network.service
+After=network.target
 
 [Service]
 Type=simple
-ExecStart=/etc/init.d/aria2 start
-KillMode=process
+ExecStart=nohup /usr/local/bin/aria2c --conf-path=/root/.aria2c/aria2.conf >>/root/.aria2c/aria2.log 2>&1 &
 
 [Install]
 WantedBy=multi-user.target
