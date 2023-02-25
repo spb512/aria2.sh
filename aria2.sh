@@ -15,7 +15,7 @@
 sh_ver="2.7.4"
 export PATH=~/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/sbin:/bin
 aria2_conf_dir="/root/.aria2c"
-download_path="/root/downloads"
+download_path="/data/downloads"
 aria2_conf="${aria2_conf_dir}/aria2.conf"
 aria2_log="${aria2_conf_dir}/aria2.log"
 aria2c="/usr/local/bin/aria2c"
@@ -189,6 +189,25 @@ Service_aria2() {
         chmod +x /etc/init.d/aria2
         update-rc.d -f aria2 defaults
     fi
+  # 创建 systemd
+  cat >/etc/systemd/system/aria2.service <<EOF
+[Unit]
+Description=aria2 service
+Wants=network.target
+After=network.target network.service
+
+[Service]
+Type=simple
+ExecStart=/etc/init.d/aria2 start
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  # 添加开机启动
+  systemctl daemon-reload
+  systemctl enable aria2 >/dev/null 2>&1
+
     echo -e "${Info} Aria2服务 管理脚本下载完成 !"
 }
 Installation_dependency() {
@@ -624,6 +643,10 @@ Uninstall_aria2() {
             update-rc.d -f aria2 remove
         fi
         rm -rf "/etc/init.d/aria2"
+        systemctl disable aria2 >/dev/null 2>&1
+        systemctl stop aria2 >/dev/null 2>&1
+        rm -f /etc/systemd/system/aria2.service
+        systemctl daemon-reload
         echo && echo "Aria2 卸载完成 !" && echo
     else
         echo && echo "卸载已取消..." && echo
